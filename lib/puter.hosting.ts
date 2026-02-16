@@ -11,7 +11,11 @@ export const getOrCreateHostingConfig = async (): Promise<HostingConfig | null> 
         try {
             const created = await puter.hosting.create(subdomain, '.')
 
-            return { subdomain: created.subdomain }
+            // Store the subdomain in kv, otherwise it will create it every single time which can lead to hitting limits and increased costs
+            const record = { subdomain: created.subdomain }
+            await puter.kv.set(HOSTING_CONFIG_KEY, record)
+
+            return record;
         } catch (e) {
             console.warn(`Could not find subdomain: ${e}`);
             return null;
