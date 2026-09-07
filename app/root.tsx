@@ -19,7 +19,6 @@ import AuthModal from "components/AuthModal";
 import { setAuthModalOpener } from "lib/api";
 
 export const links: Route.LinksFunction = () => [
-  { rel: "icon", type: "image/svg+xml", href: "/logo.svg" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",

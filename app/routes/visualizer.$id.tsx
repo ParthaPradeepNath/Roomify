@@ -1,7 +1,7 @@
 import Button from "components/ui/Button";
 import { generate3DView } from "lib/ai.action";
 import { createProject, getProjectById } from "lib/puter.action";
-import { Download, RefreshCcw, Share2, X } from "lucide-react";
+import { Box, Download, RefreshCcw, Share2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
 import { useOutletContext, useNavigate, useParams } from "react-router";
@@ -111,7 +111,7 @@ const VisualizerId = () => {
     <div className="visualizer">
       <nav className="topbar">
         <div className="brand">
-          <img src="/logo.svg" alt="Roomify logo" className="logo" />
+          <Box className="logo" />
           <span className="name">Roomify</span>
         </div>
         <Button variant="ghost" size="sm" onClick={handleBack} className="exit">
