@@ -1,0 +1,12 @@
+node_modules/
+server/node_modules/
+build/
+server/dist/
+server/generated/
+server/uploads/
+.react-router/
+package-lock.json
+server/package-lock.json
+.DS_Store
+.env
+server/.env
