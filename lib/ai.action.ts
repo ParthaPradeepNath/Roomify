@@ -21,7 +21,7 @@ export const generate3DView = async ({
 
   const response = (await puter.ai.txt2img(ROOMIFY_RENDER_PROMPT, {
     provider: "gemini",
-    model: "gemini-2.5-flash-image-preview",
+    model: "gemini-2.5-flash-image",
     input_image: base64Data,
     input_image_mime_type: mimeType,
     ratio: { w: 1024, h: 1024 },
