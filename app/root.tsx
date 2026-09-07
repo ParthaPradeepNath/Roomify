@@ -10,10 +10,13 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { useEffect, useState } from "react";
-import { getCurrentUser,
-  signIn as puterSignIn,
-  signOut as puterSignOut
- } from "lib/puter.action";
+import {
+  getCurrentUser,
+  signIn as requestSignIn,
+  signOut as requestSignOut,
+} from "lib/puter.action";
+import AuthModal from "components/AuthModal";
+import { setAuthModalOpener } from "lib/api";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -52,9 +55,9 @@ const DEFAULT_AUTH_STATE: AuthState = {
   userId: null,
 };
 
-
 export default function App() {
   const [authState, setAuthState] = useState<AuthState>(DEFAULT_AUTH_STATE);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const refreshAuth = async () => {
     try {
@@ -62,44 +65,51 @@ export default function App() {
 
       setAuthState({
         isSignedIn: !!user,
-        userName: user?.username || null,
-        userId: user?.uuid || null,
-      })
+        userName: user?.userName ?? null,
+        userId: user?.userId ?? null,
+      });
 
       return !!user; // set to true if user exists, false otherwise
     } catch {
       setAuthState(DEFAULT_AUTH_STATE);
       return false;
     }
-  }
+  };
 
   useEffect(() => {
+    setAuthModalOpener(() => () => setIsAuthModalOpen(true));
     refreshAuth();
-  }, [])
+
+    return () => setAuthModalOpener(null);
+  }, []);
 
   const signIn = async () => {
-    await puterSignIn();
+    await requestSignIn();
     return await refreshAuth();
-  }
+  };
 
   const signOut = async () => {
-    puterSignOut();
+    await requestSignOut();
     return await refreshAuth();
-  }
+  };
 
   return (
     <main className="min-h-screen bg-background text-foreground relative z-10">
-      <Outlet 
-      context={{
-        ...authState,
-        refreshAuth,
-        signIn,
-        signOut
-      }}
-      />;
+      <Outlet
+        context={{
+          ...authState,
+          refreshAuth,
+          signIn,
+          signOut,
+        }}
+      />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthenticated={refreshAuth}
+      />
     </main>
-  )
-  
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
@@ -110,9 +120,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   if (isRouteErrorResponse(error)) {
     message = error.status === 404 ? "404" : "Error";
     details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
+      error.status === 404 ? "The requested page could not be found." : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;

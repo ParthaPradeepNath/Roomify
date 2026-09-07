@@ -1,10 +1,17 @@
 export const PUTER_WORKER_URL = import.meta.env.VITE_PUTER_WORKER_URL || "";
+export const API_URL = ((import.meta.env.VITE_API_URL as string | undefined) || "").replace(
+  /\/$/,
+  "",
+);
+
+export const AUTH_TOKEN_STORAGE_KEY = "roomify_token";
+export const AUTH_USER_STORAGE_KEY = "roomify_user";
 
 // Storage Paths
 export const STORAGE_PATHS = {
-    ROOT: "roomify",
-    SOURCES: "roomify/sources",
-    RENDERS: "roomify/renders",
+  ROOT: "roomify",
+  SOURCES: "roomify/sources",
+  RENDERS: "roomify/renders",
 } as const;
 
 // Timing Constants (in milliseconds)

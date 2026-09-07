@@ -1,44 +1,39 @@
-import puter from "@heyputer/puter.js";
+import { fetchAsDataUrl } from "./utils";
 import { ROOMIFY_RENDER_PROMPT } from "./constants";
+import { isInHouseConfigured, generate3DView as inHouseGenerate3DView } from "./api";
 
-export const fetchAsDataUrl = async (url: string): Promise<string> => {
-    const response = await fetch(url);
+export const generate3DView = async ({
+  sourceImage,
+}: Generate3DViewParams): Promise<Generate3DViewResult> => {
+  // Prefer the in-house backend when configured.
+  if (isInHouseConfigured()) return inHouseGenerate3DView({ sourceImage });
 
-    if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.statusText}`)
-    }
+  // Fallback: Puter AI via Gemini.
+  const puterModule = await import("@heyputer/puter.js");
+  const puter = puterModule.default ?? puterModule;
 
-    const blob = await response.blob();
+  const dataUrl = sourceImage.startsWith("data:") ? sourceImage : await fetchAsDataUrl(sourceImage);
 
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    })
-}
+  const base64Data = dataUrl.split(",")[1];
+  const mimeType = dataUrl.split(";")[0].split(":")[1];
 
-export const generate3DView = async ({ sourceImage }: Generate3DViewParams) => {
-    const dataUrl = sourceImage.startsWith('data:') ? sourceImage : await fetchAsDataUrl(sourceImage);
+  if (!mimeType || !base64Data) throw new Error("Invalid source image payload");
 
-    const base64Data = dataUrl.split(',')[1];
-    const mimeType = dataUrl.split(';')[0].split(':')[1];
+  const response = (await puter.ai.txt2img(ROOMIFY_RENDER_PROMPT, {
+    provider: "gemini",
+    model: "gemini-2.5-flash-image-preview",
+    input_image: base64Data,
+    input_image_mime_type: mimeType,
+    ratio: { w: 1024, h: 1024 },
+  })) as HTMLImageElement;
 
-    if(!mimeType || !base64Data) throw new Error('Invalid source image payload');
+  const rawImageUrl = response.src ?? null;
 
-    const response = await puter.ai.txt2img(ROOMIFY_RENDER_PROMPT, {
-        provider: "gemini",
-        model: "gemini-2.5-flash-image-preview",
-        input_image: base64Data,
-        input_image_mime_type: mimeType,
-        ratio: { w: 1024, h: 1024 },
-    });
+  if (!rawImageUrl) return { renderedImage: null, renderedPath: undefined };
 
-    const rawImageUrl = (response as HTMLImageElement).src ?? null;
+  const renderedImage = rawImageUrl.startsWith("data")
+    ? rawImageUrl
+    : await fetchAsDataUrl(rawImageUrl);
 
-    if(!rawImageUrl) return {renderedImage: null, renderedPath: undefined };
-
-    const renderedImage = rawImageUrl.startsWith('data') ? rawImageUrl : await fetchAsDataUrl(rawImageUrl);
-
-    return { renderedImage, renderedPath: undefined };
-}
+  return { renderedImage, renderedPath: undefined };
+};
