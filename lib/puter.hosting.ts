@@ -1,4 +1,4 @@
-import puter from "@heyputer/puter.js";
+import type puter from "@heyputer/puter.js";
 import {
   createHostingSlug,
   fetchBlobFromUrl,
@@ -9,7 +9,11 @@ import {
   isHostedUrl,
 } from "./utils";
 
-export const getOrCreateHostingConfig = async (): Promise<HostingConfig | null> => {
+type PuterClient = typeof puter;
+
+export const getOrCreateHostingConfig = async (
+  puter: PuterClient,
+): Promise<HostingConfig | null> => {
   const existing = (await puter.kv.get(HOSTING_CONFIG_KEY)) as HostingConfig | null;
 
   if (existing?.subdomain) return { subdomain: existing.subdomain };
@@ -30,12 +34,10 @@ export const getOrCreateHostingConfig = async (): Promise<HostingConfig | null> 
   }
 };
 
-export const uploadImageToHosting = async ({
-  hosting,
-  url,
-  projectId,
-  label,
-}: StoreHostedImageParams): Promise<HostedAsset | null> => {
+export const uploadImageToHosting = async (
+  puter: PuterClient,
+  { hosting, url, projectId, label }: StoreHostedImageParams,
+): Promise<HostedAsset | null> => {
   if (!hosting || !url) return null;
   if (isHostedUrl(url)) return { url };
 

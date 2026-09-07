@@ -69,10 +69,11 @@ export const createProject = async ({
   if (isInHouse()) return inHouseCreateProject({ item, visibility });
 
   const puterModule = await import("@heyputer/puter.js");
-  const hosting = await getOrCreateHostingConfig();
+  const puter = puterModule.default ?? puterModule;
+  const hosting = await getOrCreateHostingConfig(puter);
 
   const hostedSource = item.id
-    ? await uploadImageToHosting({
+    ? await uploadImageToHosting(puter, {
         hosting,
         url: item.sourceImage,
         projectId: item.id,
@@ -82,7 +83,7 @@ export const createProject = async ({
 
   const hostedRender =
     item.id && item.renderedImage
-      ? await uploadImageToHosting({
+      ? await uploadImageToHosting(puter, {
           hosting,
           url: item.renderedImage,
           projectId: item.id,
