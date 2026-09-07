@@ -32,20 +32,20 @@
 
 ## Tech Stack
 
-| Layer            | Technology                                                                      |
-| ---------------- | ------------------------------------------------------------------------------- |
-| Frontend         | [React Router 8](https://reactrouter.com/) with SSR                             |
-| Build            | [Vite 8](https://vitejs.dev/)                                                   |
-| Styling          | [Tailwind CSS 4](https://tailwindcss.com/)                                      |
-| Language         | [TypeScript 7](https://www.typescriptlang.org/)                                 |
-| Formatter        | [Prettier 3](https://prettier.io/)                                              |
-| API              | [Express 5](https://expressjs.com/) with TypeScript                             |
-| Database         | [Postgres](https://www.postgresql.org/) with [Prisma 7](https://www.prisma.io/) |
-| Auth             | Email/password, bcrypt, and JWT                                                 |
-| AI               | [Gemini 2.5 Flash Image](https://ai.google.dev/) through the official REST API  |
-| Fallback backend | [Puter.js](https://docs.puter.com/)                                             |
-| Icons            | [Lucide React](https://lucide.dev/)                                             |
-| Comparison       | [React Compare Slider](https://github.com/nicolo-ribaudo/react-compare-slider)  |
+| Layer            | Technology                                                                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Frontend         | [React Router 8](https://reactrouter.com/) with SSR                                                                                                          |
+| Build            | [Vite 8](https://vitejs.dev/)                                                                                                                                |
+| Styling          | [Tailwind CSS 4](https://tailwindcss.com/)                                                                                                                   |
+| Language         | [TypeScript 7](https://www.typescriptlang.org/)                                                                                                              |
+| Formatter        | [Prettier 3](https://prettier.io/)                                                                                                                           |
+| API              | [Express 5](https://expressjs.com/) with TypeScript                                                                                                          |
+| Database         | [Postgres](https://www.postgresql.org/) with [Prisma 7](https://www.prisma.io/)                                                                              |
+| Auth             | Email/password, bcrypt, and JWT                                                                                                                              |
+| AI               | [Gemini image models](https://ai.google.dev/) via the [Vercel AI SDK](https://sdk.vercel.ai/) (`ai` + `@ai-sdk/google`), switchable through `AI_IMAGE_MODEL` |
+| Fallback backend | [Puter.js](https://docs.puter.com/)                                                                                                                          |
+| Icons            | [Lucide React](https://lucide.dev/)                                                                                                                          |
+| Comparison       | [React Compare Slider](https://github.com/nicolo-ribaudo/react-compare-slider)                                                                               |
 
 ## Getting Started
 
@@ -91,7 +91,7 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE?sslmode=require"
 JWT_SECRET="replace-with-a-long-random-secret"
 JWT_EXPIRES_IN="7d"
 GEMINI_API_KEY="replace-with-your-gemini-api-key"
-GEMINI_MODEL="gemini-2.5-flash-image-preview"
+AI_IMAGE_MODEL="gemini-2.5-flash-image"
 PUBLIC_URL="http://localhost:4000"
 UPLOAD_DIR="uploads"
 PORT=4000
@@ -159,9 +159,12 @@ Projects are scoped to the authenticated owner. Base64 source and rendered image
 
 ### AI
 
+- `GET /api/ai/models`
 - `POST /api/ai/render`
 
 Accepts a floor-plan source image as a data URL or URL and returns a Gemini-generated rendered image.
+
+Rendering goes through the Vercel AI SDK (`generateText` with `responseModalities: ["TEXT", "IMAGE"]`). Available models live in the registry in `server/src/lib/models.ts`. Switch models by setting `AI_IMAGE_MODEL` (for example `gemini-3.1-flash-image` or `gemini-3-pro-image`), or pass an optional `model` in the render request body.
 
 ## Project Structure
 
@@ -194,7 +197,8 @@ roomify/
 │   │   ├── config.ts                # Environment configuration
 │   │   ├── db.ts                    # Prisma client with Postgres adapter
 │   │   ├── lib/
-│   │   │   ├── ai.ts                # Official Gemini render integration
+│   │   │   ├── ai.ts                # Vercel AI SDK render integration
+│   │   │   ├── models.ts            # Switchable image-model registry
 │   │   │   ├── jwt.ts               # Token signing and verification
 │   │   │   ├── password.ts          # Password hashing
 │   │   │   └── storage.ts           # Image persistence and public URLs

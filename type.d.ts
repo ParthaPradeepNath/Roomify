@@ -125,9 +125,11 @@ interface CreateProjectParams {
 interface Generate3DViewParams {
   sourceImage: string;
   projectId?: string | null;
+  model?: string | null;
 }
 
 type Generate3DViewResult = {
   renderedImage: string | null;
   renderedPath?: string;
+  model?: string;
 };

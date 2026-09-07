@@ -1,10 +1,14 @@
+import { generateText } from "ai";
 import { config } from "../config.js";
+import { createImageModel, resolveImageModelId } from "./models.js";
 
-const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-
-// Gemini image generation returns url-safe (escaped) base64. Normalize it.
 const unescapeBase64 = (data: string) =>
   data.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (data.length % 4)) % 4);
+
+const toDataUrl = (mediaType: string, data: string) =>
+  data.startsWith("data:")
+    ? data
+    : `data:${mediaType || "image/png"};base64,${unescapeBase64(data)}`;
 
 export const fetchAsBase64 = async (url: string) => {
   const response = await fetch(url);
@@ -21,10 +25,32 @@ export const fetchAsBase64 = async (url: string) => {
   };
 };
 
-export const generate3DView = async (sourceImage: string) => {
+const ROOMIFY_RENDER_PROMPT = `CONVERT this 2D FLOOR PLAN into a photorealistic 3D architectural render.
+
+STRICT REQUIREMENTS:
+1. REMOVE ALL TEXT: no letters, numbers, labels, dimensions, or annotations.
+2. GEOMETRY MUST MATCH: walls, rooms, doors, and windows follow exact lines and positions. Do not shift or resize.
+3. TOP-DOWN ONLY: orthographic top-down view. No perspective tilt.
+4. CLEAN, REALISTIC OUTPUT: crisp edges, balanced lighting, realistic materials.
+5. NO EXTRA CONTENT: do not add anything not clearly indicated by the plan.
+
+DETAILS:
+- Walls: extrude precisely from plan lines, consistent height and thickness.
+- Doors: convert swing arcs into open doors aligned to the plan.
+- Windows: convert thin perimeter lines into realistic glass.
+- Add furniture only where icons/fixtures are clearly shown: bed, sofa, dining table, kitchen counters, bathroom fixtures, office desk, balcony seating.
+
+STYLE: bright neutral daylight, professional architectural visualization, no text, no watermarks, no logos.`;
+
+export const generate3DView = async (
+  sourceImage: string,
+  options: { model?: string | null } = {},
+) => {
   if (!config.geminiApiKey) {
     throw new Error("GEMINI_API_KEY is not configured on the server");
   }
+
+  const modelId = resolveImageModelId(options.model ?? config.aiImageModel);
 
   let inputData: string;
   let mimeType: string;
@@ -42,72 +68,38 @@ export const generate3DView = async (sourceImage: string) => {
     throw new Error("Invalid source image payload");
   }
 
-  const POPULATION_TEXT = `CONVERT this 2D FLOOR PLAN into a photorealistic 3D architectural render.
+  const { model } = createImageModel(modelId);
 
-STRICT REQUIREMENTS:
-1. REMOVE ALL TEXT: no letters, numbers, labels, dimensions, or annotations.
-2. GEOMETRY MUST MATCH: walls, rooms, doors, and windows follow exact lines and positions. Do not shift or resize.
-3. TOP-DOWN ONLY: orthographic top-down view. No perspective tilt.
-4. CLEAN, REALISTIC OUTPUT: crisp edges, balanced lighting, realistic materials.
-5. NO EXTRA CONTENT: do not add anything not clearly indicated by the plan.
-
-DETAILS:
-- Walls: extrude precisely from plan lines, consistent height and thickness.
-- Doors: convert swing arcs into open doors aligned to the plan.
-- Windows: convert thin perimeter lines into realistic glass.
-- Add furniture only where icons/fixtures are clearly shown: bed, sofa, dining table, kitchen counters, bathroom fixtures, office desk, balcony seating.
-
-STYLE: bright neutral daylight, professional architectural visualization, no text, no watermarks, no logos.`;
-
-  const response = await fetch(
-    `${GEMINI_BASE}/${config.geminiModel}:generateContent?key=${config.geminiApiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                inlineData: { mimeType, data: inputData },
-              },
-              {
-                text: POPULATION_TEXT,
-              },
-            ],
-          },
-        ],
-        generationConfig: {
-          responseModalities: ["IMAGE", "TEXT"],
+  let result;
+  try {
+    result = await generateText({
+      model,
+      providerOptions: {
+        google: { responseModalities: ["TEXT", "IMAGE"] },
+      },
+      prompt: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: ROOMIFY_RENDER_PROMPT },
+            {
+              type: "file",
+              data: Buffer.from(inputData, "base64"),
+              mediaType: mimeType,
+            },
+          ],
         },
-      }),
-    },
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+      ],
+    });
+  } catch (error) {
+    throw new Error(`AI render failed with model "${modelId}": ${(error as Error).message}`);
   }
 
-  const json = (await response.json()) as {
-    candidates?: Array<{
-      content?: {
-        parts?: Array<{
-          inlineData?: { mimeType?: string; data?: string };
-          text?: string;
-        }>;
-      };
-    }>;
-  };
+  const imageFile = result.files.find((file) => file.mediaType.startsWith("image/"));
 
-  const imagePart = json.candidates?.[0]?.content?.parts?.find((part) => part.inlineData?.data);
-
-  if (!imagePart?.inlineData?.data) {
-    throw new Error("Gemini returned no rendered image");
+  if (!imageFile) {
+    throw new Error(`Model "${modelId}" returned no rendered image`);
   }
 
-  const { mimeType: outMime, data } = imagePart.inlineData;
-  const dataUrl = `data:${outMime || "image/png"};base64,${unescapeBase64(data)}`;
-
-  return { renderedImage: dataUrl };
+  return { renderedImage: toDataUrl(imageFile.mediaType, imageFile.base64), model: modelId };
 };

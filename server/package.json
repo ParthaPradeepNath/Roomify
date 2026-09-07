@@ -10,9 +10,11 @@
     "db:generate": "prisma generate"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.64",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "@types/pg": "^8.23.1",
+    "ai": "^7.0.93",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

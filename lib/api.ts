@@ -165,10 +165,11 @@ export const getProjectById = async ({ id }: { id: string }) => {
 
 export const generate3DView = async ({
   sourceImage,
+  model,
 }: Generate3DViewParams): Promise<Generate3DViewResult> => {
   return request<Generate3DViewResult>("/api/ai/render", {
     method: "POST",
-    body: { sourceImage },
+    body: { sourceImage, model },
   });
 };
 
