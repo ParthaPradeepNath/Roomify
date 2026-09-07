@@ -116,7 +116,7 @@
           @apply flex items-center space-x-2 cursor-pointer;
 
           .logo {
-            @apply w-6 h-6 text-black;
+            @apply h-6 w-auto;
           }
 
           .name {

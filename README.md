@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/favicon.ico" alt="Roomify" width="48" />
+  <img src="public/logo.svg" alt="Roomify" width="96" />
 </p>
 
 <h1 align="center">Roomify</h1>
