@@ -10,7 +10,6 @@
 
 <p align="center">
   <a href="#features">Features</a> &middot;
-  <a href="#demo">Demo</a> &middot;
   <a href="#tech-stack">Tech Stack</a> &middot;
   <a href="#getting-started">Getting Started</a> &middot;
   <a href="#project-structure">Structure</a> &middot;
@@ -21,156 +20,251 @@
 
 ## Features
 
-- **AI 3D Rendering** — Converts 2D floor plans into photorealistic top-down 3D architectural renders using Gemini 2.5 Flash
-- **Drag & Drop Upload** — Drop a floor plan image (JPG, PNG, WebP) and get started instantly
-- **Before / After Comparison** — Interactive slider to compare the original plan with the AI render
-- **Project Management** — Save, list, and revisit past projects via Puter cloud storage
-- **Image Hosting** — Rendered images are hosted on Puter hosting with persistent URLs
-- **Authentication** — One-click sign-in/sign-up powered by Puter Auth
+- **In-house AI 3D Rendering** — Converts 2D floor plans into photorealistic top-down 3D renders through the Roomify API using the official Gemini API
+- **Puter Fallback** — Keeps the original Puter AI, auth, storage, hosting, and worker implementation available when the in-house API is not configured
+- **Email/Password Auth** — Self-hosted JWT authentication with bcrypt password hashing
+- **Project Management** — Save, list, and revisit projects stored in Postgres
+- **Image Hosting** — Uploaded and rendered images are persisted by the API and served from `/uploads`
+- **Drag & Drop Upload** — Drop a floor plan image and get started instantly
+- **Before / After Comparison** — Interactive slider compares the original plan with the AI render
 - **Export** — Download rendered images as PNG
-- **Docker Ready** — Multi-stage Dockerfile for production deployment
-
-## Demo
-
-Upload a floor plan on the homepage, and the visualizer will automatically generate a 3D render. Drag the comparison slider to see the transformation.
+- **Docker Ready** — Frontend, API, and Postgres can run together with Docker Compose
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | [React Router v7](https://reactrouter.com/) (SSR) |
-| Build | [Vite](https://vitejs.dev/) |
-| Styling | [Tailwind CSS v4](https://tailwindcss.com/) |
-| Language | [TypeScript](https://www.typescriptlang.org/) |
-| AI | [Gemini 2.5 Flash](https://ai.google.dev/) via [Puter.js](https://docs.puter.com/) |
-| Auth & Storage | [Puter](https://puter.com/) (Auth, KV, FS, Hosting) |
-| Icons | [Lucide React](https://lucide.dev/) |
-| Comparison | [React Compare Slider](https://github.com/nicolo-ribaudo/react-compare-slider) |
+| Layer            | Technology                                                                      |
+| ---------------- | ------------------------------------------------------------------------------- |
+| Frontend         | [React Router 8](https://reactrouter.com/) with SSR                             |
+| Build            | [Vite 8](https://vitejs.dev/)                                                   |
+| Styling          | [Tailwind CSS 4](https://tailwindcss.com/)                                      |
+| Language         | [TypeScript 7](https://www.typescriptlang.org/)                                 |
+| Formatter        | [Prettier 3](https://prettier.io/)                                              |
+| API              | [Express 5](https://expressjs.com/) with TypeScript                             |
+| Database         | [Postgres](https://www.postgresql.org/) with [Prisma 7](https://www.prisma.io/) |
+| Auth             | Email/password, bcrypt, and JWT                                                 |
+| AI               | [Gemini 2.5 Flash Image](https://ai.google.dev/) through the official REST API  |
+| Fallback backend | [Puter.js](https://docs.puter.com/)                                             |
+| Icons            | [Lucide React](https://lucide.dev/)                                             |
+| Comparison       | [React Compare Slider](https://github.com/nicolo-ribaudo/react-compare-slider)  |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js >= 18
+- Node.js 22 or later
 - npm
-- A [Puter](https://puter.com/) account (for auth, storage, and AI)
+- Postgres, or Docker Compose
+- A Gemini API key for AI rendering
 
-### Installation
+### 1. Install dependencies
 
 ```bash
-git clone https://github.com/ParthaPradeepNath/roomify.git
-cd roomify
 npm install
+cd server
+npm install
+cd ..
 ```
 
-### Environment Variables
+### 2. Configure the frontend
 
-Create a `.env` file in the project root:
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
 
 ```env
+VITE_API_URL=http://localhost:4000
 VITE_PUTER_WORKER_URL=https://your-worker.puter.work
 ```
 
-> The Puter worker handles project CRUD operations. See `lib/puter.worker.js` for the worker code to deploy on [Puter](https://docs.puter.com/).
+If `VITE_API_URL` is set, the app uses the in-house backend. If it is empty, the app falls back to Puter.
 
-### Development
+### 3. Configure the API
+
+```bash
+cp server/.env.example server/.env
+```
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE?sslmode=require"
+JWT_SECRET="replace-with-a-long-random-secret"
+JWT_EXPIRES_IN="7d"
+GEMINI_API_KEY="replace-with-your-gemini-api-key"
+GEMINI_MODEL="gemini-2.5-flash-image-preview"
+PUBLIC_URL="http://localhost:4000"
+UPLOAD_DIR="uploads"
+PORT=4000
+```
+
+Never commit real values from `.env` or `server/.env`.
+
+### 4. Prepare the database
+
+```bash
+cd server
+npm run db:generate
+npm run db:push
+cd ..
+```
+
+### 5. Run the app
+
+In one terminal:
+
+```bash
+cd server
+npm run dev
+```
+
+In another terminal:
 
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`.
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:4000`
+- API health check: `http://localhost:4000/health`
 
-### Type Check
+### Checks
 
 ```bash
 npm run typecheck
-```
-
-### Build
-
-```bash
 npm run build
+cd server
+npm run build
+cd ..
+npm run format:check
 ```
 
-### Production
+## API Reference
 
-```bash
-npm start
-```
+All project and AI routes require a JWT in the `Authorization: Bearer <token>` header.
 
-Serves the built app on `http://localhost:3000`.
+### Auth
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `POST /api/auth/logout`
+
+### Projects
+
+- `POST /api/projects/save`
+- `GET /api/projects/list`
+- `GET /api/projects/get?id=<project-id>`
+
+Projects are scoped to the authenticated owner. Base64 source and rendered images are stored under `uploads/projects/<project-id>/` and returned as public URLs.
+
+### AI
+
+- `POST /api/ai/render`
+
+Accepts a floor-plan source image as a data URL or URL and returns a Gemini-generated rendered image.
 
 ## Project Structure
 
 ```
 roomify/
 ├── app/
-│   ├── root.tsx                     # Root layout, auth provider
+│   ├── root.tsx                     # Root layout and auth provider
 │   ├── routes.ts                    # Route definitions
 │   ├── routes/
 │   │   ├── home.tsx                 # Homepage: hero, upload, project grid
 │   │   └── visualizer.$id.tsx       # Visualizer: render, compare, export
-│   └── app.css                      # Global styles (Tailwind + component layers)
+│   └── app.css                      # Global styles
 ├── components/
+│   ├── AuthModal.tsx                # In-house login/register modal
 │   ├── Navbar.tsx                   # Top navigation bar
-│   ├── Upload.tsx                   # Drag & drop file upload with progress
+│   ├── Upload.tsx                   # Drag-and-drop upload with progress
 │   └── ui/
 │       └── Button.tsx               # Reusable button component
 ├── lib/
-│   ├── ai.action.ts                 # Gemini AI rendering (txt2img)
-│   ├── constants.ts                 # Prompt, paths, timing constants
-│   ├── puter.action.ts              # Puter: auth, project CRUD
-│   ├── puter.hosting.ts             # Puter: hosting & image upload
-│   ├── puter.worker.js              # Puter worker (deploy separately)
-│   └── utils.ts                     # Image conversion, URL helpers
+│   ├── ai.action.ts                 # In-house AI call with Puter fallback
+│   ├── api.ts                       # In-house REST and token client
+│   ├── constants.ts                 # Backend, storage, timing, and prompt constants
+│   ├── puter.action.ts              # Backend dispatcher and Puter fallback
+│   ├── puter.hosting.ts             # Puter image hosting fallback
+│   ├── puter.worker.js              # Legacy Puter worker implementation
+│   └── utils.ts                     # Image conversion and URL helpers
+├── server/
+│   ├── src/
+│   │   ├── index.ts                 # Express app entry point
+│   │   ├── config.ts                # Environment configuration
+│   │   ├── db.ts                    # Prisma client with Postgres adapter
+│   │   ├── lib/
+│   │   │   ├── ai.ts                # Official Gemini render integration
+│   │   │   ├── jwt.ts               # Token signing and verification
+│   │   │   ├── password.ts          # Password hashing
+│   │   │   └── storage.ts           # Image persistence and public URLs
+│   │   ├── middleware/
+│   │   │   └── auth.ts              # JWT request authentication
+│   │   └── routes/
+│   │       ├── auth.ts              # Register, login, current user, logout
+│   │       ├── projects.ts          # Save, list, and retrieve projects
+│   │       └── render.ts            # AI render endpoint
+│   ├── prisma/
+│   │   └── schema.prisma            # User and Project models
+│   ├── Dockerfile                   # API production image
+│   └── package.json                 # API dependencies and scripts
+├── docker-compose.yml               # Frontend, API, and Postgres
+├── Dockerfile                       # Frontend production image
 ├── type.d.ts                        # Shared TypeScript interfaces
-├── Dockerfile                       # Multi-stage Docker build
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-└── react-router.config.ts
+└── README.md
 ```
 
 ## How It Works
 
-1. **Upload** — User uploads a 2D floor plan image via the drag-and-drop uploader
-2. **Store** — The image is saved to Puter File System under the project directory
-3. **Render** — The AI action calls `puter.ai.txt2img()` with a detailed architectural prompt and the floor plan as input, using Gemini 2.5 Flash to generate a 1024x1024 photorealistic top-down 3D render
-4. **Compare** — The visualizer shows the original plan and the AI render side-by-side with an interactive comparison slider
-5. **Export** — Users can download the rendered image as PNG
+1. **Sign in** — Users create an account or sign in through the in-house auth modal. Puter sign-in remains available when the API URL is not configured.
+2. **Upload** — A 2D floor plan is uploaded from the homepage.
+3. **Store** — The API persists the source image and stores the project in Postgres.
+4. **Render** — The visualizer calls `/api/ai/render`, which sends the plan and architectural prompt to Gemini and returns a rendered image.
+5. **Compare** — The original plan and AI render are displayed with an interactive comparison slider.
+6. **Export** — Users can download the rendered image as PNG.
 
 ## Deployment
 
-### Docker
+### Docker Compose
+
+The recommended local production-like deployment runs the frontend, API, and Postgres together:
+
+```bash
+docker compose up --build
+```
+
+- Frontend: `http://localhost:3000`
+- API: `http://localhost:4000`
+
+For browser access from another host, set `PUBLIC_URL` and `VITE_API_URL` to the publicly reachable API address. Set a strong `JWT_SECRET` outside local development.
+
+### Frontend Docker image
 
 ```bash
 docker build -t roomify .
 docker run -p 3000:3000 roomify
 ```
 
-The multi-stage Dockerfile builds a minimal production image with only runtime dependencies.
+Use build arguments to configure backend endpoints:
 
-### Puter Worker
-
-The backend logic runs as a [Puter Worker](https://docs.puter.com/) (`lib/puter.worker.js`). Deploy it to Puter and set the `VITE_PUTER_WORKER_URL` environment variable to point to your worker URL.
-
-The worker exposes:
-- `POST /api/projects/save` — Save a project
-- `GET /api/projects/list` — List all user projects
-- `GET /api/projects/get?id=` — Get a project by ID
-
-### Manual
-
-Deploy the output of `npm run build` to any Node.js hosting:
-
-```
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+```bash
+docker build \
+  --build-arg VITE_API_URL=https://api.example.com \
+  --build-arg VITE_PUTER_WORKER_URL=https://your-worker.puter.work \
+  -t roomify .
 ```
 
-Supported platforms: AWS ECS, Google Cloud Run, Azure Container Apps, Fly.io, Railway, DigitalOcean App Platform.
+### API Docker image
+
+```bash
+docker build -t roomify-api ./server
+```
+
+The API image generates the Prisma client during the build and synchronizes the database schema before starting.
+
+### Puter fallback
+
+The legacy Puter worker remains in `lib/puter.worker.js`. Deploy it to Puter and configure `VITE_PUTER_WORKER_URL` if you want the original Puter auth, storage, hosting, worker, and AI path instead of the in-house backend.
 
 ## License
 
