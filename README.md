@@ -1,45 +1,28 @@
-<p align="center">
-  <img src="public/favicon.ico" alt="Roomify" width="48" />
-</p>
+# Roomify
 
-<h1 align="center">Roomify</h1>
-
-<p align="center">
-  AI-powered floor plan to 3D visualization. Upload a 2D floor plan and get a photorealistic top-down 3D render in seconds.
-</p>
-
-<p align="center">
-  <a href="#features">Features</a> &middot;
-  <a href="#tech-stack">Tech Stack</a> &middot;
-  <a href="#getting-started">Getting Started</a> &middot;
-  <a href="#project-structure">Structure</a> &middot;
-  <a href="#deployment">Deployment</a>
-</p>
-
----
+AI-powered floor plan to 3D visualization. Upload a 2D floor plan and get a photorealistic top-down 3D render in seconds — fully in-house, no external SaaS backend.
 
 ## Features
 
-- **In-house AI 3D Rendering** — Converts 2D floor plans into photorealistic top-down 3D renders through the Roomify API using the official Gemini API
+- **In-house AI 3D Rendering** — Converts 2D floor plans into photorealistic top-down 3D renders using the official Gemini API via the Vercel AI SDK
 - **Email/Password Auth** — Self-hosted JWT authentication with bcrypt password hashing
 - **Project Management** — Save, list, and revisit projects stored in Postgres
-- **Image Hosting** — Uploaded and rendered images are persisted by the API and served from `/uploads`
+- **Image Hosting** — Uploaded and rendered images are persisted locally and served from `/uploads`
 - **Drag & Drop Upload** — Drop a floor plan image and get started instantly
 - **Before / After Comparison** — Interactive slider compares the original plan with the AI render
 - **Export** — Download rendered images as PNG
-- **Docker Ready** — Frontend, API, and Postgres can run together with Docker Compose
+- **Docker Ready** — The app and Postgres can run together with Docker Compose
 
 ## Tech Stack
 
 | Layer      | Technology                                                                                                                                                   |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Frontend   | [React Router 8](https://reactrouter.com/) with SSR                                                                                                          |
-| Build      | [Vite 8](https://vitejs.dev/)                                                                                                                                |
+| Framework  | [Next.js 16](https://nextjs.org/) (App Router, server & client components)                                                                                   |
 | Styling    | [Tailwind CSS 4](https://tailwindcss.com/)                                                                                                                   |
-| Language   | [TypeScript 7](https://www.typescriptlang.org/)                                                                                                              |
-| Formatter  | [Prettier 3](https://prettier.io/)                                                                                                                           |
-| API        | [Express 5](https://expressjs.com/) with TypeScript                                                                                                          |
-| Database   | [Postgres](https://www.postgresql.org/) with [Prisma 7](https://www.prisma.io/)                                                                              |
+| Language   | [TypeScript](https://www.typescriptlang.org/)                                                                                                                |
+| Package    | [Bun](https://bun.sh/)                                                                                                                                       |
+| API        | Next.js [Route Handlers](https://nextjs.org/docs/app/getting-started/route-handlers)                                                                         |
+| Database   | [Postgres](https://www.postgresql.org/) with [Prisma 7](https://www.prisma.io/) + `@prisma/adapter-pg`                                                        |
 | Auth       | Email/password, bcrypt, and JWT                                                                                                                              |
 | AI         | [Gemini image models](https://ai.google.dev/) via the [Vercel AI SDK](https://sdk.vercel.ai/) (`ai` + `@ai-sdk/google`), switchable through `AI_IMAGE_MODEL` |
 | Icons      | [Lucide React](https://lucide.dev/)                                                                                                                          |
@@ -49,36 +32,22 @@
 
 ### Prerequisites
 
-- Node.js 22 or later
-- npm
+- Node.js 20+ or [Bun](https://bun.sh/)
 - Postgres, or Docker Compose
 - A Gemini API key for AI rendering
 
 ### 1. Install dependencies
 
 ```bash
-npm install
-cd server
-npm install
-cd ..
+bun install
 ```
 
-### 2. Configure the frontend
+### 2. Configure the environment
 
 Copy the example environment file:
 
 ```bash
-cp .env.example .env
-```
-
-```env
-VITE_API_URL=http://localhost:4000
-```
-
-### 3. Configure the API
-
-```bash
-cp server/.env.example server/.env
+cp .env.example .env.local
 ```
 
 ```env
@@ -87,50 +56,33 @@ JWT_SECRET="replace-with-a-long-random-secret"
 JWT_EXPIRES_IN="7d"
 GEMINI_API_KEY="replace-with-your-gemini-api-key"
 AI_IMAGE_MODEL="gemini-2.5-flash-image"
-PUBLIC_URL="http://localhost:4000"
+PUBLIC_URL="http://localhost:3000"
 UPLOAD_DIR="uploads"
-PORT=4000
 ```
 
-Never commit real values from `.env` or `server/.env`.
+Never commit real values from `.env.local`.
 
-### 4. Prepare the database
+### 3. Prepare the database
 
 ```bash
-cd server
-npm run db:generate
-npm run db:push
-cd ..
+bun run db:generate
+bun run db:push
 ```
 
-### 5. Run the app
-
-In one terminal:
+### 4. Run the app
 
 ```bash
-cd server
-npm run dev
+bun run dev
 ```
 
-In another terminal:
-
-```bash
-npm run dev
-```
-
-- Frontend: `http://localhost:5173`
-- API: `http://localhost:4000`
-- API health check: `http://localhost:4000/health`
+- App and API: `http://localhost:3000`
+- Health check: `http://localhost:3000/api/health`
 
 ### Checks
 
 ```bash
-npm run typecheck
-npm run build
-cd server
-npm run build
-cd ..
-npm run format:check
+bun run lint
+bun run build
 ```
 
 ## API Reference
@@ -150,7 +102,7 @@ All project and AI routes require a JWT in the `Authorization: Bearer <token>` h
 - `GET /api/projects/list`
 - `GET /api/projects/get?id=<project-id>`
 
-Projects are scoped to the authenticated owner. Base64 source and rendered images are stored under `uploads/projects/<project-id>/` and returned as public URLs.
+Projects are scoped to the authenticated owner. Base64 source and rendered images are stored under `uploads/projects/<project-id>/` and returned as public URLs served by `/uploads/...`.
 
 ### AI
 
@@ -159,54 +111,51 @@ Projects are scoped to the authenticated owner. Base64 source and rendered image
 
 Accepts a floor-plan source image as a data URL or URL and returns a Gemini-generated rendered image.
 
-Rendering goes through the Vercel AI SDK (`generateText` with `responseModalities: ["TEXT", "IMAGE"]`). Available models live in the registry in `server/src/lib/models.ts`. Switch models by setting `AI_IMAGE_MODEL` (for example `gemini-3.1-flash-image` or `gemini-3-pro-image`), or pass an optional `model` in the render request body.
+Rendering goes through the Vercel AI SDK (`generateText` with `responseModalities: ["TEXT", "IMAGE"]`). Available models live in the registry in `src/lib/models.ts`. Switch models by setting `AI_IMAGE_MODEL` (for example `gemini-3.1-flash-image` or `gemini-3-pro-image`), or pass an optional `model` in the render request body.
 
 ## Project Structure
 
 ```
 roomify/
-├── app/
-│   ├── root.tsx                     # Root layout and auth provider
-│   ├── routes.ts                    # Route definitions
-│   ├── routes/
-│   │   ├── home.tsx                 # Homepage: hero, upload, project grid
-│   │   └── visualizer.$id.tsx       # Visualizer: render, compare, export
-│   └── app.css                      # Global styles
-├── components/
-│   ├── AuthModal.tsx                # In-house login/register modal
-│   ├── Navbar.tsx                   # Top navigation bar
-│   ├── Upload.tsx                   # Drag-and-drop upload with progress
-│   └── ui/
-│       └── Button.tsx               # Reusable button component
-├── lib/
-│   ├── api.ts                       # Backend REST client, auth, and AI calls
-│   └── constants.ts                 # Backend, storage, and timing constants
+├── prisma/
+│   └── schema.prisma              # User and Project models
+├── prisma.config.ts               # Prisma CLI configuration
+├── src/
+│   ├── app/
+│   │   ├── api/                   # Route handlers (in-house backend)
+│   │   │   ├── auth/              # register, login, me, logout
+│   │   │   ├── projects/          # save, list, get
+│   │   │   ├── ai/                # render, models
+│   │   │   ├── uploads/[...path]  # Serves stored images
+│   │   │   └── health/
+│   │   ├── visualizer/[id]/       # Visualizer: render, compare, export
+│   │   ├── layout.tsx             # Root layout, fonts, auth provider
+│   │   ├── page.tsx               # Homepage: hero, upload, project grid
+│   │   ├── globals.css            # Tailwind theme and component styles
+│   │   └── icon.svg               # Roomify favicon
+│   ├── components/
+│   │   ├── AuthModal.tsx          # In-house login/register modal
+│   │   ├── AuthProvider.tsx       # Auth state context
+│   │   ├── AuthModalHost.tsx      # Global auth modal host
+│   │   ├── Navbar.tsx             # Top navigation bar
+│   │   ├── Upload.tsx             # Drag-and-drop upload with progress
+│   │   └── ui/Button.tsx          # Reusable button component
+│   └── lib/
+│       ├── api.ts                 # Backend REST client, auth, and AI calls
+│       ├── auth.ts                # JWT request authentication
+│       ├── config.ts              # Environment configuration
+│       ├── ai.ts                  # Vercel AI SDK render integration
+│       ├── models.ts              # Switchable image-model registry
+│       ├── jwt.ts                 # Token signing and verification
+│       ├── password.ts            # Password hashing
+│       ├── storage.ts             # Image persistence and public URLs
+│       ├── db.ts                  # Prisma client with Postgres adapter
+│       ├── constants.ts           # Storage and timing constants
+│       └── types.ts               # Shared TypeScript interfaces
 ├── docs/
-│   └── puter-notes.md               # Archived Puter implementation (reference only)
-├── server/
-│   ├── src/
-│   │   ├── index.ts                 # Express app entry point
-│   │   ├── config.ts                # Environment configuration
-│   │   ├── db.ts                    # Prisma client with Postgres adapter
-│   │   ├── lib/
-│   │   │   ├── ai.ts                # Vercel AI SDK render integration
-│   │   │   ├── models.ts            # Switchable image-model registry
-│   │   │   ├── jwt.ts               # Token signing and verification
-│   │   │   ├── password.ts          # Password hashing
-│   │   │   └── storage.ts           # Image persistence and public URLs
-│   │   ├── middleware/
-│   │   │   └── auth.ts              # JWT request authentication
-│   │   └── routes/
-│   │       ├── auth.ts              # Register, login, current user, logout
-│   │       ├── projects.ts          # Save, list, and retrieve projects
-│   │       └── render.ts            # AI render endpoint
-│   ├── prisma/
-│   │   └── schema.prisma            # User and Project models
-│   ├── Dockerfile                   # API production image
-│   └── package.json                 # API dependencies and scripts
-├── docker-compose.yml               # Frontend, API, and Postgres
-├── Dockerfile                       # Frontend production image
-├── type.d.ts                        # Shared TypeScript interfaces
+│   └── puter-notes.md             # Archived Puter implementation (reference only)
+├── docker-compose.yml             # Postgres + Next.js app
+├── Dockerfile                     # Production image
 └── README.md
 ```
 
@@ -223,41 +172,31 @@ roomify/
 
 ### Docker Compose
 
-The recommended local production-like deployment runs the frontend, API, and Postgres together:
+The recommended local production-like deployment runs the app and Postgres together:
 
 ```bash
 docker compose up --build
 ```
 
-- Frontend: `http://localhost:3000`
-- API: `http://localhost:4000`
+- App and API: `http://localhost:3000`
 
-For browser access from another host, set `PUBLIC_URL` and `VITE_API_URL` to the publicly reachable API address. Set a strong `JWT_SECRET` outside local development.
+For browser access from another host, set `PUBLIC_URL` to the publicly reachable address of the app. Set a strong `JWT_SECRET` outside local development.
 
-### Frontend Docker image
+### Single Docker image
 
 ```bash
 docker build -t roomify .
-docker run -p 3000:3000 roomify
+docker run -p 3000:3000 \
+  -e DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/roomify \
+  -e JWT_SECRET=replace-with-a-long-random-secret \
+  -e GEMINI_API_KEY=replace-with-your-gemini-api-key \
+  -v roomify-uploads:/app/uploads \
+  roomify
 ```
 
-Use build arguments to configure backend endpoints:
+The image generates the Prisma client during the build and synchronizes the database schema before starting.
 
-```bash
-docker build \
-  --build-arg VITE_API_URL=https://api.example.com \
-  -t roomify .
-```
-
-### API Docker image
-
-```bash
-docker build -t roomify-api ./server
-```
-
-The API image generates the Prisma client during the build and synchronizes the database schema before starting.
-
-### Archived Puter implementation
+## Archived Puter implementation
 
 The original Puter-based backend (auth, storage, hosting, worker, AI) is no longer wired into the app. Its code is preserved for reference in `docs/puter-notes.md`.
 
