@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { signToken } from "@/lib/jwt";
-import { hashPassword, verifyPassword } from "@/lib/password";
-import { requireAuth } from "@/lib/auth";
+import { hashPassword } from "@/lib/password";
 
 const toSafeUser = (user: { id: string; email: string; name: string | null }) => ({
   id: user.id,
