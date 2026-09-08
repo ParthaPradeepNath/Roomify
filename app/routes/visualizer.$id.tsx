@@ -1,6 +1,5 @@
 import Button from "components/ui/Button";
-import { generate3DView } from "lib/ai.action";
-import { createProject, getProjectById } from "lib/puter.action";
+import { createProject, generate3DView, getProjectById } from "lib/api";
 import { Box, Download, RefreshCcw, Share2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";

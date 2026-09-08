@@ -185,3 +185,8 @@ export const setAuthModalOpener = (fn: AuthModalOpener | null) => {
 export const requireAuthModal = () => {
   authModalOpener?.();
 };
+
+export const signIn = async () => {
+  requireAuthModal();
+  return false;
+};

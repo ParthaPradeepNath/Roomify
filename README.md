@@ -21,7 +21,6 @@
 ## Features
 
 - **In-house AI 3D Rendering** — Converts 2D floor plans into photorealistic top-down 3D renders through the Roomify API using the official Gemini API
-- **Puter Fallback** — Keeps the original Puter AI, auth, storage, hosting, and worker implementation available when the in-house API is not configured
 - **Email/Password Auth** — Self-hosted JWT authentication with bcrypt password hashing
 - **Project Management** — Save, list, and revisit projects stored in Postgres
 - **Image Hosting** — Uploaded and rendered images are persisted by the API and served from `/uploads`
@@ -32,20 +31,19 @@
 
 ## Tech Stack
 
-| Layer            | Technology                                                                                                                                                   |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Frontend         | [React Router 8](https://reactrouter.com/) with SSR                                                                                                          |
-| Build            | [Vite 8](https://vitejs.dev/)                                                                                                                                |
-| Styling          | [Tailwind CSS 4](https://tailwindcss.com/)                                                                                                                   |
-| Language         | [TypeScript 7](https://www.typescriptlang.org/)                                                                                                              |
-| Formatter        | [Prettier 3](https://prettier.io/)                                                                                                                           |
-| API              | [Express 5](https://expressjs.com/) with TypeScript                                                                                                          |
-| Database         | [Postgres](https://www.postgresql.org/) with [Prisma 7](https://www.prisma.io/)                                                                              |
-| Auth             | Email/password, bcrypt, and JWT                                                                                                                              |
-| AI               | [Gemini image models](https://ai.google.dev/) via the [Vercel AI SDK](https://sdk.vercel.ai/) (`ai` + `@ai-sdk/google`), switchable through `AI_IMAGE_MODEL` |
-| Fallback backend | [Puter.js](https://docs.puter.com/)                                                                                                                          |
-| Icons            | [Lucide React](https://lucide.dev/)                                                                                                                          |
-| Comparison       | [React Compare Slider](https://github.com/nicolo-ribaudo/react-compare-slider)                                                                               |
+| Layer      | Technology                                                                                                                                                   |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Frontend   | [React Router 8](https://reactrouter.com/) with SSR                                                                                                          |
+| Build      | [Vite 8](https://vitejs.dev/)                                                                                                                                |
+| Styling    | [Tailwind CSS 4](https://tailwindcss.com/)                                                                                                                   |
+| Language   | [TypeScript 7](https://www.typescriptlang.org/)                                                                                                              |
+| Formatter  | [Prettier 3](https://prettier.io/)                                                                                                                           |
+| API        | [Express 5](https://expressjs.com/) with TypeScript                                                                                                          |
+| Database   | [Postgres](https://www.postgresql.org/) with [Prisma 7](https://www.prisma.io/)                                                                              |
+| Auth       | Email/password, bcrypt, and JWT                                                                                                                              |
+| AI         | [Gemini image models](https://ai.google.dev/) via the [Vercel AI SDK](https://sdk.vercel.ai/) (`ai` + `@ai-sdk/google`), switchable through `AI_IMAGE_MODEL` |
+| Icons      | [Lucide React](https://lucide.dev/)                                                                                                                          |
+| Comparison | [React Compare Slider](https://github.com/nicolo-ribaudo/react-compare-slider)                                                                               |
 
 ## Getting Started
 
@@ -75,10 +73,7 @@ cp .env.example .env
 
 ```env
 VITE_API_URL=http://localhost:4000
-VITE_PUTER_WORKER_URL=https://your-worker.puter.work
 ```
-
-If `VITE_API_URL` is set, the app uses the in-house backend. If it is empty, the app falls back to Puter.
 
 ### 3. Configure the API
 
@@ -184,13 +179,10 @@ roomify/
 │   └── ui/
 │       └── Button.tsx               # Reusable button component
 ├── lib/
-│   ├── ai.action.ts                 # In-house AI call with Puter fallback
-│   ├── api.ts                       # In-house REST and token client
-│   ├── constants.ts                 # Backend, storage, timing, and prompt constants
-│   ├── puter.action.ts              # Backend dispatcher and Puter fallback
-│   ├── puter.hosting.ts             # Puter image hosting fallback
-│   ├── puter.worker.js              # Legacy Puter worker implementation
-│   └── utils.ts                     # Image conversion and URL helpers
+│   ├── api.ts                       # Backend REST client, auth, and AI calls
+│   └── constants.ts                 # Backend, storage, and timing constants
+├── docs/
+│   └── puter-notes.md               # Archived Puter implementation (reference only)
 ├── server/
 │   ├── src/
 │   │   ├── index.ts                 # Express app entry point
@@ -220,7 +212,7 @@ roomify/
 
 ## How It Works
 
-1. **Sign in** — Users create an account or sign in through the in-house auth modal. Puter sign-in remains available when the API URL is not configured.
+1. **Sign in** — Users create an account or sign in through the auth modal.
 2. **Upload** — A 2D floor plan is uploaded from the homepage.
 3. **Store** — The API persists the source image and stores the project in Postgres.
 4. **Render** — The visualizer calls `/api/ai/render`, which sends the plan and architectural prompt to Gemini and returns a rendered image.
@@ -254,7 +246,6 @@ Use build arguments to configure backend endpoints:
 ```bash
 docker build \
   --build-arg VITE_API_URL=https://api.example.com \
-  --build-arg VITE_PUTER_WORKER_URL=https://your-worker.puter.work \
   -t roomify .
 ```
 
@@ -266,9 +257,9 @@ docker build -t roomify-api ./server
 
 The API image generates the Prisma client during the build and synchronizes the database schema before starting.
 
-### Puter fallback
+### Archived Puter implementation
 
-The legacy Puter worker remains in `lib/puter.worker.js`. Deploy it to Puter and configure `VITE_PUTER_WORKER_URL` if you want the original Puter auth, storage, hosting, worker, and AI path instead of the in-house backend.
+The original Puter-based backend (auth, storage, hosting, worker, AI) is no longer wired into the app. Its code is preserved for reference in `docs/puter-notes.md`.
 
 ## License
 

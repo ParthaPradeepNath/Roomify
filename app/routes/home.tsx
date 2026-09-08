@@ -5,7 +5,7 @@ import Button from "components/ui/Button";
 import Upload from "components/Upload";
 import { useNavigate } from "react-router";
 import { useEffect, useRef, useState } from "react";
-import { createProject, getProjects } from "lib/puter.action";
+import { createProject, getProjects } from "lib/api";
 
 export function meta({}: Route.MetaArgs) {
   return [

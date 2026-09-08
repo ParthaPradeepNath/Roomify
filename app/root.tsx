@@ -10,15 +10,13 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { useEffect, useState } from "react";
-import {
-  getCurrentUser,
-  signIn as requestSignIn,
-  signOut as requestSignOut,
-} from "lib/puter.action";
+import { getCurrentUser, signIn as requestSignIn, logout as requestSignOut } from "lib/api";
 import AuthModal from "components/AuthModal";
 import { setAuthModalOpener } from "lib/api";
 
 export const links: Route.LinksFunction = () => [
+  { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+  { rel: "alternate icon", href: "/favicon.ico" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
@@ -65,8 +63,8 @@ export default function App() {
 
       setAuthState({
         isSignedIn: !!user,
-        userName: user?.userName ?? null,
-        userId: user?.userId ?? null,
+        userName: user?.name ?? null,
+        userId: user?.id ?? null,
       });
 
       return !!user; // set to true if user exists, false otherwise
