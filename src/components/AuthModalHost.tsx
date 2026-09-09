@@ -15,10 +15,6 @@ export const AuthModalHost = () => {
   }, []);
 
   return (
-    <AuthModal
-      isOpen={isOpen}
-      onClose={() => setIsOpen(false)}
-      onAuthenticated={refreshAuth}
-    />
+    <AuthModal isOpen={isOpen} onClose={() => setIsOpen(false)} onAuthenticated={refreshAuth} />
   );
 };

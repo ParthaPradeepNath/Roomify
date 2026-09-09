@@ -53,9 +53,7 @@ const AuthModal = ({ isOpen, onClose, onAuthenticated }: AuthModalProps) => {
       reset();
       onClose();
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Something went wrong. Please try again.",
-      );
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -114,10 +112,7 @@ const AuthModal = ({ isOpen, onClose, onAuthenticated }: AuthModalProps) => {
         </form>
         <p className="switch">
           {mode === "login" ? "New to Roomify?" : "Already have an account?"}{" "}
-          <button
-            type="button"
-            onClick={() => switchMode(mode === "login" ? "register" : "login")}
-          >
+          <button type="button" onClick={() => switchMode(mode === "login" ? "register" : "login")}>
             {mode === "login" ? "Create an account" : "Sign in"}
           </button>
         </p>

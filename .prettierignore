@@ -1,12 +1,20 @@
 node_modules/
-server/node_modules/
+.next/
 build/
-server/dist/
-server/generated/
-server/uploads/
-.react-router/
+uploads/
+public/**/*.png
+.git/
+*.log
+
+# Lockfiles prettier can't format
 package-lock.json
-server/package-lock.json
-.DS_Store
+bun.lock
+
+# Secrets
 .env
-server/.env
+.env.local
+.env.*.local
+
+# Vitest coverage and caches
+coverage/
+.turbo/

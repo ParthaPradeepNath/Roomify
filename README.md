@@ -22,7 +22,7 @@ AI-powered floor plan to 3D visualization. Upload a 2D floor plan and get a phot
 | Language   | [TypeScript](https://www.typescriptlang.org/)                                                                                                                |
 | Package    | [Bun](https://bun.sh/)                                                                                                                                       |
 | API        | Next.js [Route Handlers](https://nextjs.org/docs/app/getting-started/route-handlers)                                                                         |
-| Database   | [Postgres](https://www.postgresql.org/) with [Prisma 7](https://www.prisma.io/) + `@prisma/adapter-pg`                                                        |
+| Database   | [Postgres](https://www.postgresql.org/) with [Prisma 7](https://www.prisma.io/) + `@prisma/adapter-pg`                                                       |
 | Auth       | Email/password, bcrypt, and JWT                                                                                                                              |
 | AI         | [Gemini image models](https://ai.google.dev/) via the [Vercel AI SDK](https://sdk.vercel.ai/) (`ai` + `@ai-sdk/google`), switchable through `AI_IMAGE_MODEL` |
 | Icons      | [Lucide React](https://lucide.dev/)                                                                                                                          |

@@ -20,10 +20,7 @@ export async function POST(request: Request) {
     const { email, password, name } = body ?? {};
 
     if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
 
     if (typeof password !== "string" || password.length < 8) {

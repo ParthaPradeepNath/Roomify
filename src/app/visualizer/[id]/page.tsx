@@ -4,10 +4,7 @@ import Button from "@/components/ui/Button";
 import { createProject, generate3DView, getProjectById } from "@/lib/api";
 import { Box, Download, RefreshCcw, Share2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ReactCompareSlider,
-  ReactCompareSliderImage,
-} from "react-compare-slider";
+import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import type { DesignItem } from "@/lib/types";

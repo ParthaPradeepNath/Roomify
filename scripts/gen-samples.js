@@ -1,5 +1,5 @@
-const sharp = require("sharp");
-const fs = require("fs");
+import fs from "fs";
+import sharp from "sharp";
 
 // ---- helpers -------------------------------------------------------------
 const WALL = "#2b2b2b";
@@ -58,7 +58,8 @@ function label(x, y, text, size = 26) {
 function bed(x, y, w, h) {
   let s = rect(x, y, w, h, "#ececea", FURN, 3);
   s += rect(x + 16, y + h / 2 - 28, w - 32, 56, "none", FURN, 2);
-  for (let i = 1; i <= 3; i++) s += `<line x1="${x + 16}" y1="${y + h / 2 - 28 + i * 14}" x2="${x + w - 16}" y2="${y + h / 2 - 28 + i * 14}" stroke="${FURN}" stroke-width="1.5"/>`;
+  for (let i = 1; i <= 3; i++)
+    s += `<line x1="${x + 16}" y1="${y + h / 2 - 28 + i * 14}" x2="${x + w - 16}" y2="${y + h / 2 - 28 + i * 14}" stroke="${FURN}" stroke-width="1.5"/>`;
   return s;
 }
 
@@ -84,7 +85,7 @@ function y_off(x, v) {
   return v;
 }
 
-function toilet(x, y, facing = "up") {
+function toilet(x, y) {
   // bowl on top, tank below
   return (
     rect(x + 6, y + 26, 34, 22, "#ececea", FURN, 2) +
@@ -175,7 +176,7 @@ ${label(820, 250, "LIVING / DINING")}
 ${label(820, 380, "KITCHEN")}
 ${label(1360, 150, "BATH")}
 ${label(820, 540, "BEDROOM")}
-${label(1280, 1180 - 40, "BALCONY") }
+${label(1280, 1180 - 40, "BALCONY")}
 ${label(1420, 720, "BALCONY")}
 <text x="60" y="1060" font-family="Arial" font-size="20" fill="#c8ccd3">1 BEDROOM · 780 SQ FT · SCALE 1:100</text>
 </svg>`;
@@ -228,12 +229,11 @@ const plans = [
 ];
 
 (async () => {
+  const tmpDir = "/tmp/roomify-samples";
+  fs.mkdirSync(tmpDir, { recursive: true });
   for (const p of plans) {
-    fs.writeFileSync(
-      `/Users/partha/Developer/Projects/roomify/scripts/${p.name}.svg`,
-      p.svg,
-    );
+    fs.writeFileSync(`${tmpDir}/${p.name}.svg`, p.svg);
     await sharp(Buffer.from(p.svg)).resize(p.w, p.h).png().toFile(`public/${p.name}.png`);
     console.log(`wrote public/${p.name}.png`);
   }
-})()
+})();

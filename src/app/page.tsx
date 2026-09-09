@@ -8,9 +8,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createProject, getProjects } from "@/lib/api";
 import type { DesignItem } from "@/lib/types";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function Home() {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const [projects, setProjects] = useState<DesignItem[]>([]);
   const isCreatingProjectRef = useRef(false);
 
@@ -47,12 +49,20 @@ export default function Home() {
   };
 
   useEffect(() => {
+    if (!isSignedIn) {
+      setProjects([]);
+      return;
+    }
     const fetchProjects = async () => {
-      const items = await getProjects();
-      setProjects(items);
+      try {
+        const items = await getProjects();
+        setProjects(items);
+      } catch {
+        setProjects([]);
+      }
     };
     fetchProjects();
-  }, []);
+  }, [isSignedIn]);
 
   return (
     <div className="home">

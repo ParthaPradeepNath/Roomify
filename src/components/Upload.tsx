@@ -96,7 +96,11 @@ const Upload = ({ onComplete }: UploadProps) => {
             <div className="drop-icon">
               <UploadIcon size={20} />
             </div>
-            <p>{isSignedIn ? "Click to upload or just drag and drop" : "Sign in or sign up to upload"}</p>
+            <p>
+              {isSignedIn
+                ? "Click to upload or just drag and drop"
+                : "Sign in or sign up to upload"}
+            </p>
             <p className="help">Maximum file size 50 MB.</p>
           </div>
         </div>
